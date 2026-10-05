@@ -1,0 +1,57 @@
+# ==============================================================================
+# KP Physics Academy — Unified Docker Compose (Node.js Alpine App + PostgreSQL)
+# Local Dev:  BUILD_TARGET=development NODE_ENV=development docker compose up --build
+# Production: docker compose up -d --build
+# ==============================================================================
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ${BUILD_TARGET:-production}
+    container_name: kp-physics-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3000
+      DATABASE_URL: ${DATABASE_URL}
+      AUTH_SECRET: ${AUTH_SECRET}
+      DOMAIN_NAME: ${DOMAIN_NAME:-localhost}
+    volumes:
+      - kp_app_data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - kp-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: kp-physics-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - kp_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kp-network
+
+volumes:
+  kp_app_data:
+  kp_postgres_data:
+
+networks:
+  kp-network:
+    driver: bridge

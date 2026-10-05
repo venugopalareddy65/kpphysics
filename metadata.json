@@ -1,0 +1,6 @@
+{
+  "name": "KP Physics Academy",
+  "description": "Online Physics learning platform for Class 10, 11, 12, JEE Main/Advanced, and NEET with interactive simulations, structured courses, study materials, and timed mock examinations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

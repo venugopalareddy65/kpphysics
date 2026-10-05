@@ -1,0 +1,29 @@
+# ==============================================================================
+# KP Physics Academy — Caddy 2 Automatic HTTPS & Security Reverse Proxy
+# ==============================================================================
+
+{$DOMAIN_NAME:localhost} {
+  encode zstd gzip
+
+  # Security Headers Baseline
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    X-Content-Type-Options "nosniff"
+    X-Frame-Options "SAMEORIGIN"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    -Server
+  }
+
+  # Immutable Long-Term Cache for Vite Fingerprinted Assets
+  @staticAssets {
+    path /assets/*
+  }
+  header @staticAssets Cache-Control "public, max-age=31536000, immutable"
+
+  # Reverse Proxy all traffic to Express + Vite App on port 3000
+  reverse_proxy kp-app:3000 {
+    health_uri /api/health
+    health_interval 30s
+    health_timeout 5s
+  }
+}

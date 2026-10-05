@@ -1,0 +1,92 @@
+# ==============================================================================
+# KP Physics Academy — Production Zero-Cost Stack (Oracle Cloud VM / VPS)
+# Usage: docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+# ==============================================================================
+
+services:
+  kp-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/kp-physics-academy/kp-platform:latest
+    container_name: kp-physics-prod-app
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-kpadmin}:${POSTGRES_PASSWORD:-ChangeMeStrongPassword}@kp-postgres:5432/${POSTGRES_DB:-kp_physics_prod}?schema=public
+      AUTH_SECRET: ${AUTH_SECRET:-replace-with-openssl-rand-base64-32}
+      APP_URL: ${APP_URL:-https://kpphysicsacademy.in}
+    volumes:
+      - kp_runtime_data:/app/data
+    depends_on:
+      kp-postgres:
+        condition: service_healthy
+    networks:
+      - kp-prod-private
+
+  kp-postgres:
+    image: postgres:16-alpine
+    container_name: kp-physics-prod-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kpadmin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeMeStrongPassword}
+      POSTGRES_DB: ${POSTGRES_DB:-kp_physics_prod}
+    volumes:
+      - kp_postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-kpadmin} -d $${POSTGRES_DB:-kp_physics_prod}"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kp-prod-private
+
+  kp-caddy:
+    image: caddy:2-alpine
+    container_name: kp-physics-caddy-tls
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN_NAME: ${DOMAIN_NAME:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - kp_caddy_data:/data
+      - kp_caddy_config:/config
+    depends_on:
+      - kp-app
+    networks:
+      - kp-prod-private
+
+  kp-db-backup:
+    image: postgres:16-alpine
+    container_name: kp-physics-db-backup
+    restart: always
+    environment:
+      POSTGRES_HOST: kp-postgres
+      POSTGRES_USER: ${POSTGRES_USER:-kpadmin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeMeStrongPassword}
+      POSTGRES_DB: ${POSTGRES_DB:-kp_physics_prod}
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup-db.sh:/backup-db.sh:ro
+    entrypoint: ["/bin/sh", "/backup-db.sh"]
+    depends_on:
+      kp-postgres:
+        condition: service_healthy
+    networks:
+      - kp-prod-private
+
+volumes:
+  kp_runtime_data:
+  kp_postgres_prod_data:
+  kp_caddy_data:
+  kp_caddy_config:
+
+networks:
+  kp-prod-private:
+    driver: bridge

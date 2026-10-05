@@ -1,0 +1,66 @@
+# ==============================================================================
+# KP Physics Academy — Local Development Stack (Docker Compose)
+# Usage: docker compose -f docker-compose.local.yml up --build
+# ==============================================================================
+
+services:
+  kp-app-local:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kp-physics-local-app
+    command: npx tsx server.ts
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://kpuser:kppassword_local@kp-postgres-local:5432/kp_physics_dev?schema=public
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./src:/app/src
+      - ./server.ts:/app/server.ts
+      - kp_local_data:/app/data
+    depends_on:
+      kp-postgres-local:
+        condition: service_healthy
+    networks:
+      - kp-local-net
+
+  kp-postgres-local:
+    image: postgres:16-alpine
+    container_name: kp-physics-local-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kpuser
+      POSTGRES_PASSWORD: kppassword_local
+      POSTGRES_DB: kp_physics_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - kp_postgres_local_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kpuser -d kp_physics_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kp-local-net
+
+  kp-adminer:
+    image: adminer:latest
+    container_name: kp-physics-db-studio
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kp-postgres-local
+    networks:
+      - kp-local-net
+
+volumes:
+  kp_local_data:
+  kp_postgres_local_data:
+
+networks:
+  kp-local-net:
+    driver: bridge

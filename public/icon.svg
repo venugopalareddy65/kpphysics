@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#050C24" />
+      <stop offset="50%" stop-color="#0B1942" />
+      <stop offset="100%" stop-color="#112559" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" />
+      <stop offset="50%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+    <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#67E8F9" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+  <g transform="translate(256, 256)">
+    <ellipse rx="165" ry="64" fill="none" stroke="url(#cyanGrad)" stroke-width="14" transform="rotate(30)" />
+    <ellipse rx="165" ry="64" fill="none" stroke="url(#goldGrad)" stroke-width="14" transform="rotate(-30)" />
+    <ellipse rx="165" ry="64" fill="none" stroke="#38BDF8" stroke-width="12" opacity="0.75" transform="rotate(90)" />
+    <circle r="38" fill="url(#goldGrad)" />
+    <circle cx="142" cy="82" r="14" fill="#67E8F9" />
+    <circle cx="-142" cy="82" r="14" fill="#FDE047" />
+    <circle cx="0" cy="-165" r="14" fill="#38BDF8" />
+  </g>
+</svg>
